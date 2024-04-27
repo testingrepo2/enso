@@ -126,7 +126,7 @@ abstract class TypePropagation {
           }
         };
 
-    TypeRepresentation ascribedType = findTypeAscription(expression);
+    TypeRepresentation ascribedType = typeResolver.findTypeAscription(expression);
     checkInferredAndAscribedTypeCompatibility(expression, inferredType, ascribedType);
 
     // We now override the inferred type on the expression, preferring the ascribed type if it is
@@ -429,16 +429,6 @@ abstract class TypePropagation {
         }
       }
       default -> {}
-    }
-  }
-
-  private TypeRepresentation findTypeAscription(Expression ir) {
-    TypeSignatures.Signature ascribedSignature =
-        getMetadataOrNull(ir, TypeSignatures$.MODULE$, TypeSignatures.Signature.class);
-    if (ascribedSignature != null) {
-      return typeResolver.resolveTypeExpression(ascribedSignature.signature());
-    } else {
-      return null;
     }
   }
 
