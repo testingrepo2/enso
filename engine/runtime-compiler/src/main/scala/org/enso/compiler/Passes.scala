@@ -3,7 +3,7 @@ package org.enso.compiler
 import org.enso.compiler.data.CompilerConfig
 import org.enso.compiler.pass.PassConfiguration._
 import org.enso.compiler.pass.analyse._
-import org.enso.compiler.pass.analyse.types.TypeInference
+import org.enso.compiler.pass.analyse.types.TypeInferencePropagation
 import org.enso.compiler.pass.desugar._
 import org.enso.compiler.pass.lint.{
   ModuleNameConflicts,
@@ -104,7 +104,7 @@ class Passes(
       GenericAnnotations
     ) ++ (if (config.staticTypeInferenceEnabled) {
             List(
-              TypeInference.INSTANCE
+              TypeInferencePropagation.INSTANCE
             )
           } else List())
   )
