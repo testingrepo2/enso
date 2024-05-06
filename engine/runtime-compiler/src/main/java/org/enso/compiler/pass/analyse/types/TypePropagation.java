@@ -123,7 +123,7 @@ abstract class TypePropagation {
           }
         };
 
-    TypeRepresentation ascribedType = typeResolver.findTypeAscription(expression);
+    TypeRepresentation ascribedType = typeResolver.getTypeAscription(expression);
     checkInferredAndAscribedTypeCompatibility(expression, inferredType, ascribedType);
 
     // We now override the inferred type on the expression, preferring the ascribed type if it is
