@@ -49,7 +49,13 @@ export function useEvent<K extends keyof ElementEventMap>(
 export function useEvent(
   target: EventTarget,
   event: string,
-  handler: (event: unknown) => void,
+  handler: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions,
+): void
+export function useEvent(
+  target: EventTarget,
+  event: string,
+  handler: EventListenerOrEventListenerObject,
   options?: boolean | AddEventListenerOptions,
 ): void {
   target.addEventListener(event, handler, options)
@@ -128,7 +134,7 @@ const hasWindow = typeof window !== 'undefined'
 const platform = hasWindow ? window.navigator?.platform ?? '' : ''
 export const isMacLike = /(Mac|iPhone|iPod|iPad)/i.test(platform)
 
-export function modKey(e: KeyboardEvent): boolean {
+export function modKey(e: KeyboardEvent | MouseEvent): boolean {
   return isMacLike ? e.metaKey : e.ctrlKey
 }
 
@@ -275,7 +281,8 @@ export const enum PointerButtonMask {
 /**
  * Register for a pointer dragging events.
  *
- * @param handler callback on any pointer event
+ * @param handler callback on any pointer event.
+ * If `false` is returned from the callback, `preventDefault` will NOT be called for the event.
  * @param requiredButtonMask declare which buttons to look for. The value represents a `PointerEvent.buttons` mask.
  * @returns
  */
@@ -298,7 +305,7 @@ export function usePointer(
 
     if (trackedElement != null && initialGrabPos != null && lastPos != null) {
       if (handler(computePosition(e, initialGrabPos, lastPos), e, 'stop') !== false) {
-        e.preventDefault()
+        e.stopImmediatePropagation()
       }
 
       lastPos = null
@@ -310,7 +317,7 @@ export function usePointer(
   function doMove(e: PointerEvent) {
     if (trackedElement != null && initialGrabPos != null && lastPos != null) {
       if (handler(computePosition(e, initialGrabPos, lastPos), e, 'move') !== false) {
-        e.preventDefault()
+        e.stopImmediatePropagation()
       }
       lastPos = new Vec2(e.clientX, e.clientY)
     }
@@ -332,7 +339,7 @@ export function usePointer(
         initialGrabPos = new Vec2(e.clientX, e.clientY)
         lastPos = initialGrabPos
         if (handler(computePosition(e, initialGrabPos, lastPos), e, 'start') !== false) {
-          e.preventDefault()
+          e.stopImmediatePropagation()
         }
       }
     },
@@ -355,24 +362,8 @@ export function usePointer(
     },
   }
 
-  const stopEvents = {
-    pointerdown(e: PointerEvent) {
-      e.stopImmediatePropagation()
-      events.pointerdown(e)
-    },
-    pointerup(e: PointerEvent) {
-      e.stopImmediatePropagation()
-      events.pointerup(e)
-    },
-    pointermove(e: PointerEvent) {
-      e.stopImmediatePropagation()
-      events.pointermove(e)
-    },
-  }
-
   return proxyRefs({
     events,
-    stop: { events: stopEvents },
     dragging,
   })
 }

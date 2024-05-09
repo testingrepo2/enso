@@ -5,7 +5,6 @@ use crate::env::accessor::RawVariable;
 use crate::env::accessor::TypedVariable;
 
 use anyhow::Context;
-use std::collections::BTreeSet;
 use unicase::UniCase;
 
 
@@ -14,6 +13,7 @@ use unicase::UniCase;
 // ==============
 
 pub mod accessor;
+pub mod consts;
 pub mod known;
 
 

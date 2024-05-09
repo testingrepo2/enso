@@ -1,3 +1,4 @@
+import type { NodeCreationOptions } from '@/components/GraphEditor/nodeCreation'
 import { createContextStore } from '@/providers'
 import type { URLString } from '@/util/data/urlString'
 import { Vec2 } from '@/util/data/vec2'
@@ -15,13 +16,15 @@ export interface VisualizationConfig {
   readonly nodeSize: Vec2
   readonly scale: number
   readonly isFocused: boolean
+  readonly nodeType: string | undefined
   isBelowToolbar: boolean
   width: number | null
   height: number
+  nodePosition: Vec2
   fullscreen: boolean
   hide: () => void
   updateType: (type: VisualizationIdentifier) => void
-  addNode: (pos: Vec2 | undefined) => void
+  createNodes: (...options: NodeCreationOptions[]) => void
 }
 
 export { provideFn as provideVisualizationConfig }

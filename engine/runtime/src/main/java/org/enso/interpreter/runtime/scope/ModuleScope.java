@@ -1,6 +1,8 @@
 package org.enso.interpreter.runtime.scope;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.library.ExportLibrary;
+import com.oracle.truffle.api.library.ExportMessage;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,9 +20,11 @@ import org.enso.interpreter.runtime.data.EnsoObject;
 import org.enso.interpreter.runtime.data.Type;
 import org.enso.interpreter.runtime.error.RedefinedConversionException;
 import org.enso.interpreter.runtime.error.RedefinedMethodException;
+import org.enso.interpreter.runtime.library.dispatch.TypesLibrary;
 import org.enso.interpreter.runtime.util.CachingSupplier;
 
 /** A representation of Enso's per-file top-level scope. */
+@ExportLibrary(TypesLibrary.class)
 public final class ModuleScope implements EnsoObject {
   private final Type associatedType;
   private final Module module;
@@ -50,7 +54,7 @@ public final class ModuleScope implements EnsoObject {
     this.imports = new HashSet<>();
     this.exports = new HashSet<>();
     this.module = module;
-    this.associatedType = Type.createSingleton(module.getName().item(), this, null, false);
+    this.associatedType = Type.createSingleton(module.getName().item(), this, null, false, false);
   }
 
   public ModuleScope(
@@ -99,7 +103,7 @@ public final class ModuleScope implements EnsoObject {
   }
 
   /**
-   * Returns a map of methods defined in this module for a given constructor.
+   * Returns a map of methods defined in this module for a given type.
    *
    * @param type the type for which method map is requested
    * @return a map containing all the defined methods by name
@@ -300,6 +304,7 @@ public final class ModuleScope implements EnsoObject {
     return types;
   }
 
+  @ExportMessage.Ignore
   public Optional<Type> getType(String name) {
     if (associatedType.getName().equals(name)) {
       return Optional.of(associatedType);
@@ -323,13 +328,29 @@ public final class ModuleScope implements EnsoObject {
   /**
    * Returns the names of methods for the given type.
    *
-   * @param tpe the type in the scope
-   * @return names of methods
+   * @param tpe the type in the scope. If null, treated as {@code noType}.
+   * @return names of methods or null
    */
   public Set<String> getMethodNamesForType(Type tpe) {
     Type tpeKey = tpe == null ? noTypeKey : tpe;
     var allTpeMethods = methods.get(tpeKey);
     return allTpeMethods == null ? null : allTpeMethods.keySet();
+  }
+
+  /**
+   * Returns a set of all the functions for a type, or null.
+   *
+   * @param tpe the type in the scope. If null, treated as {@code noType}.
+   * @return set of methods or null.
+   */
+  public Set<Function> getMethodsForType(Type tpe) {
+    Type tpeKey = tpe == null ? noTypeKey : tpe;
+    var allTpeMethods = methods.get(tpeKey);
+    if (allTpeMethods != null) {
+      return allTpeMethods.values().stream().map(Supplier::get).collect(Collectors.toSet());
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -424,6 +445,16 @@ public final class ModuleScope implements EnsoObject {
         conversions,
         imports,
         exports);
+  }
+
+  @ExportMessage
+  boolean hasType() {
+    return true;
+  }
+
+  @ExportMessage
+  Type getType() {
+    return getAssociatedType();
   }
 
   @Override

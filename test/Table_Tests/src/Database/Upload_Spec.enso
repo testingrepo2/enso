@@ -8,7 +8,6 @@ import Standard.Base.Runtime.Context
 import Standard.Base.Runtime.Managed_Resource.Managed_Resource
 import Standard.Base.Runtime.Ref.Ref
 
-import Standard.Table.Data.Type.Value_Type.Bits
 from Standard.Table import all
 from Standard.Table.Errors import all
 
@@ -28,9 +27,9 @@ polyglot java import org.enso.table_test_helpers.ExplodingStoragePayload
 polyglot java import java.lang.Thread
 
 main filter=Nothing =
-    create_connection_func _ = (Database.connect (SQLite In_Memory))
+    create_connection_func _ = (Database.connect (SQLite.In_Memory))
     suite = Test.build suite_builder->
-        add_specs suite_builder  create_connection_func "SQLite In-Memory" persistent_connector=False
+        add_specs suite_builder  create_connection_func "SQLite.In-Memory" persistent_connector=False
     suite.run_with_filter filter
 
 type Data

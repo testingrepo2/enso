@@ -15,8 +15,11 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.logging.Level;
+import org.enso.common.LanguageInfo;
+import org.enso.common.MethodNames.Module;
+import org.enso.common.MethodNames.TopScope;
 import org.enso.interpreter.EnsoLanguage;
-import org.enso.polyglot.MethodNames.Module;
+import org.enso.interpreter.runtime.EnsoContext;
 import org.enso.polyglot.RuntimeOptions;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Language;
@@ -54,6 +57,12 @@ public abstract class TestBase {
             Paths.get("../../distribution/component").toFile().getAbsolutePath());
   }
 
+  protected static EnsoContext leakContext(Context ctx) {
+    return ctx.getBindings(LanguageInfo.ID)
+        .invokeMember(TopScope.LEAK_CONTEXT)
+        .as(EnsoContext.class);
+  }
+
   /**
    * Executes the given callable in the given context. A necessity for executing artificially
    * created Truffle ASTs.
@@ -62,7 +71,7 @@ public abstract class TestBase {
    */
   protected static Value executeInContext(Context ctx, Callable<Object> callable) {
     // Force initialization of the context
-    ctx.eval("enso", "42");
+    ctx.eval("enso", "value = 0");
     var err = new Exception[1];
     ctx.getPolyglotBindings()
         .putMember(
@@ -153,19 +162,19 @@ public abstract class TestBase {
    * node inside a context, all the other nodes, and insert them via {@link
    * #insertChildren(Node...)}.
    */
-  static class TestRootNode extends RootNode {
+  protected static final class TestRootNode extends RootNode {
     private final Function<VirtualFrame, Object> callback;
 
-    TestRootNode() {
+    public TestRootNode() {
       this(null);
     }
 
-    TestRootNode(Function<VirtualFrame, Object> callback) {
+    public TestRootNode(Function<VirtualFrame, Object> callback) {
       super(EnsoLanguage.get(null));
       this.callback = callback;
     }
 
-    void insertChildren(Node... children) {
+    public void insertChildren(Node... children) {
       for (Node child : children) {
         insert(child);
       }

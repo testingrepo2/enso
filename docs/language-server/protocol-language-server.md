@@ -158,7 +158,6 @@ transport formats, please look [here](./protocol-architecture).
   - [`search/getSuggestionsDatabaseVersion`](#searchgetsuggestionsdatabaseversion)
   - [`search/suggestionsDatabaseUpdate`](#searchsuggestionsdatabaseupdate)
   - [`search/suggestionsOrderDatabaseUpdate`](#searchsuggestionsorderdatabaseupdate)
-  - [`search/completion`](#searchcompletion)
 - [Input/Output Operations](#inputoutput-operations)
   - [`io/redirectStandardOutput`](#ioredirectstandardoutput)
   - [`io/suppressStandardOutput`](#iosuppressstandardoutput)
@@ -188,6 +187,9 @@ transport formats, please look [here](./protocol-architecture).
 - [Profiling Operations](#profiling-operations)
   - [`profiling/start`](#profilingstart)
   - [`profiling/stop`](#profilingstop)
+- [AI Operations](#ai-operations)
+  - [`ai/completion_v2`](#aicompletionv2)
+  - [`ai/completionProgress`](#aicompletionprogres)
 - [Errors](#errors-75)
   - [`Error`](#error)
   - [`AccessDeniedError`](#accessdeniederror)
@@ -500,8 +502,14 @@ interface Module {
   /** The documentation string. */
   documentation?: string;
 
-  /** The fully qualified module name re-exporting this module. */
+  /** The fully qualified module name re-exporting this module.
+   *
+   * @deprecated use reexports field instead
+   */
   reexport?: string;
+
+  /** The list of fully qualified module names re-exporting this module. */
+  reexports: string[];
 }
 
 interface Type {
@@ -520,8 +528,14 @@ interface Type {
   /** Qualified name of the parent type. */
   parentType?: string;
 
-  /** The fully qualified module name re-exporting this type. */
+  /** The fully qualified module name re-exporting this type.
+   *
+   * @deprecated use reexports field instead
+   */
   reexport?: string;
+
+  /** The list of fully qualified module names re-exporting this type. */
+  reexports: string[];
 
   /** The documentation string. */
   documentation?: string;
@@ -543,8 +557,14 @@ interface Constructor {
   /** The type of the constructor. */
   returnType: string;
 
-  /** The fully qualified module name re-exporting this constructor. */
+  /** The fully qualified module name re-exporting this constructor.
+   *
+   * @deprecated use reexports field instead
+   */
   reexport?: string;
+
+  /** The list of fully qualified module names re-exporting this constructor. */
+  reexports: string[];
 
   /** The documentation string. */
   documentation?: string;
@@ -575,8 +595,14 @@ interface Method {
   /** The flag indicating whether this method is static or instance. */
   isStatic: boolean;
 
-  /** The fully qualified module name re-exporting this method. */
+  /** The fully qualified module name re-exporting this method.
+   *
+   * @deprecated use reexports field instead
+   */
   reexport?: string;
+
+  /** The list of fully qualified module names re-exporting this method. */
+  reexports: string[];
 
   /** The documentation string. */
   documentation?: string;
@@ -4273,7 +4299,7 @@ interface SearchGetSuggestionsDatabaseVersionResult {
 
 ### `search/suggestionsDatabaseUpdate`
 
-Sent from server to the client to inform abouth the change in the suggestions
+Sent from server to the client to inform about the change in the suggestions
 database.
 
 - **Type:** Notification
@@ -4292,7 +4318,7 @@ interface SearchSuggestionsDatabaseUpdateNotification {
 
 ### `search/suggestionsOrderDatabaseUpdate`
 
-Sent from server to the client to inform abouth the change in the suggestions
+Sent from server to the client to inform about the change in the suggestions
 order database.
 
 - **Type:** Notification
@@ -5155,6 +5181,92 @@ interface ProfilingStopResult {}
 
 None
 
+## AI Operations
+
+### `ai/completion_v2`
+
+Sent from the client to the server to ask the AI model the code suggestion.
+
+- **Type:** Request
+- **Direction:** Client -> Server
+- **Connection:** Protocol
+- **Visibility:** Public
+
+#### Parameters
+
+```typescript
+interface AiCompletionParameters {
+  /** The execution context id to use for executing expressions. */
+  contextId: UUID;
+  /**
+   * The expression providing the execution scope. The same as `expressionId`
+   * parameter of `executionContext/executeExpression` method.
+   */
+  expressionId: UUID;
+  /** The user prompt. */
+  prompt: string;
+  /** The system prompt describing the AI role. */
+  systemPrompt?: string;
+  /** The AI model to use. */
+  model?: string;
+}
+```
+
+#### Result
+
+```typescript
+type AiCompletionResult = AiCompletionResultSuccess | AiCompletionResultFailure;
+
+interface AiCompletionResultSuccess {
+  /** The code of the function producing the desired result. */
+  fn: string;
+
+  /** The code of how to call the suggested function. */
+  fnCall: string;
+}
+
+interface AiCompletionResultFailure {
+  /**
+   * The explanation given by the AI model for why it was unable to provide the
+   * answer.
+   */
+  reason: string;
+}
+```
+
+#### Errors
+
+- [`AiHttpError`](#aihttperror) Signals about an error during the processing of
+  AI http respnse.
+- [`AiEvaluationError`](#aievaluationerror) Signals about an error during the
+  evaluation of expression requested by AI.
+
+### `ai/completionProgress`
+
+Sent from server to the client to inform about the progress of the
+[`ai/completion`](#aicompletion) request.
+
+- **Type:** Notification
+- **Direction:** Server -> Client
+- **Connection:** Protocol
+- **Visibility:** Public
+
+#### Notification
+
+```typescript
+interface AiCompletionProgressNotification {
+  /** Code snippte that AI model requested to evaluate. */
+  code: string;
+  /** Explanation given by the AI model why it needs an extra information. */
+  reason: string;
+  /**
+   * The id of the visualization being executed. When evaluated, the
+   * visualization update will contain the result of the executed expression.
+   */
+  visualizationId: UUID;
+}
+```
+
 ## Errors
 
 The language server component also has its own set of errors. This section is
@@ -5738,5 +5850,36 @@ Signals that the refactoring of the given expression is not supported.
 "error" : {
   "code" : 9003,
   "message" : "Refactoring not supported for expression [<expression-id>]"
+}
+```
+
+### `AiHttpError`
+
+Signals about an error during the processing of AI http respnse.
+
+```typescript
+"error" : {
+  "code" : 10001,
+  "message" : "Failed to process HTTP response",
+  "payload" : {
+    "reason" : "<Failure reason>",
+    "request" : "<HTTP request sent>",
+    "response" : "<HTTP response received>"
+  }
+}
+```
+
+### `AiEvaluationError`
+
+Signals about an error during the evaluation of expression requested by AI.
+
+```typescript
+"error" : {
+  "code" : 10002,
+  "message" : "Failed to execute expression",
+  "payload" : {
+    "expression" : "<Evaluated expression>",
+    "error" : "<The evaluation error message>"
+  }
 }
 ```

@@ -1,14 +1,13 @@
 from Standard.Base import all
 
-import Standard.Table.Data.Type.Value_Type.Bits
-from Standard.Table import Aggregate_Column, Value_Type, Table
+from Standard.Table import Aggregate_Column, Value_Type, Table, Bits
 from Standard.Table.Errors import Invalid_Value_Type, Inexact_Type_Coercion
 
 import Standard.Database.Dialect
 import Standard.Database.Extensions.Upload_Database_Table
 import Standard.Database.Extensions.Upload_In_Memory_Table
 import Standard.Database.Internal.SQLite.SQLite_Type_Mapping
-from Standard.Database import Database, SQLite, In_Memory, SQL_Query
+from Standard.Database import Database, SQLite, SQL_Query
 from Standard.Database.Errors import Unsupported_Database_Operation
 
 from Standard.Test import all
@@ -19,7 +18,7 @@ type Data
     Value ~connection
 
     setup =
-        connection = Database.connect (SQLite In_Memory)
+        connection = Database.connect (SQLite.In_Memory)
         Data.Value connection
 
     teardown self = self.connection.close

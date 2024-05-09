@@ -42,6 +42,15 @@ pub struct Location {
     pub col16: u32,
 }
 
+impl Display for Location {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Location{{")?;
+        write!(f, "utf8 = {utf8}, utf16 = {utf16}, ", utf8 = self.utf8, utf16 = self.utf16)?;
+        write!(f, "line = {line}, col16 = {col16}", line = self.line, col16 = self.col16)?;
+        write!(f, "}}")
+    }
+}
+
 impl Add<Length> for Location {
     type Output = Self;
 
@@ -144,8 +153,8 @@ impl<'s> Code<'s> {
 
     /// Length of the code in bytes.
     #[inline(always)]
-    pub fn len(&self) -> Bytes {
-        Bytes(self.repr.len())
+    pub fn len(&self) -> usize {
+        self.repr.len()
     }
 
     /// Length of the code.
@@ -384,6 +393,16 @@ pub mod debug {
             }
             let non_char_boundary_locations: Vec<_> = self.locations.values().cloned().collect();
             assert_eq!(&non_char_boundary_locations, &[]);
+        }
+    }
+
+    impl Display for LocationCheck {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "LocationCheck{{")?;
+            for (k, v) in &self.locations {
+                write!(f, "{k}: {v}")?;
+            }
+            write!(f, "}}")
         }
     }
 }

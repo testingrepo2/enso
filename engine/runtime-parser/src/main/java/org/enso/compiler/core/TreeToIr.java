@@ -175,7 +175,7 @@ final class TreeToIr {
           }
           if (expr instanceof Private priv) {
             if (priv.getBody() != null) {
-              var error = translateSyntaxError(priv, new Syntax.UnsupportedSyntax("Private token with body"));
+              var error = translateSyntaxError(priv, new Syntax.UnsupportedSyntax("The `private` keyword is currently not supported for entities other than constructors."));
               diag = join(error, diag);
             }
             if (isPrivate) {
@@ -338,12 +338,12 @@ final class TreeToIr {
     return res.reverse();
   }
 
-  IR translateConstructorDefinition(Tree.ConstructorDefinition cons, Tree inputAst) {
+  IR translateConstructorDefinition(Tree.ConstructorDefinition cons, Tree inputAst, boolean isPrivate) {
     try {
       var constructorName = buildName(inputAst, cons.getConstructor());
       List<DefinitionArgument> args = translateArgumentsDefinition(cons.getArguments());
       var cAt = getIdentifiedLocation(inputAst);
-      return new Definition.Data(constructorName, args, nil(), cAt, meta(), diag());
+      return new Definition.Data(constructorName, args, nil(), cAt, isPrivate, meta(), diag());
     } catch (SyntaxException ex) {
       return ex.toError();
     }
@@ -369,7 +369,17 @@ final class TreeToIr {
     return switch (inputAst) {
       case null -> appendTo;
 
-      case Tree.ConstructorDefinition cons -> join(translateConstructorDefinition(cons, inputAst), appendTo);
+      case Tree.Private priv -> {
+        if (priv.getBody() instanceof Tree.ConstructorDefinition consDef) {
+          var translated = translateConstructorDefinition(consDef, priv, true);
+          yield join(translated, appendTo);
+        } else {
+          var errorIr = translateSyntaxError(priv, Syntax.UnexpectedDeclarationInType$.MODULE$);
+          yield join(errorIr, appendTo);
+        }
+      }
+
+      case Tree.ConstructorDefinition cons -> join(translateConstructorDefinition(cons, inputAst, false), appendTo);
 
       case Tree.TypeDef def -> {
         var ir = translateSyntaxError(def, Syntax.UnexpectedDeclarationInType$.MODULE$);
@@ -615,7 +625,7 @@ final class TreeToIr {
     var tree = ast;
     for (;;) {
       switch (tree) {
-        case Tree.App app when app.getArg() instanceof Tree.AutoScope -> {
+        case Tree.App app when app.getArg() instanceof Tree.SuspendedDefaultArguments -> {
           hasDefaultsSuspended = true;
           tree = app.getFunc();
         }
@@ -636,6 +646,9 @@ final class TreeToIr {
           var at = args.size();
           var self = translateExpression(app.getLhs(), false);
           for (var l : app.getExpressions()) {
+            if (l.getExpression() == null) {
+              continue;
+            }
             var invoke = isDotOperator(l.getExpression().getOperator().getRight());
             if (self == null || !invoke) {
               return null;
@@ -670,16 +683,6 @@ final class TreeToIr {
               var loc = getIdentifiedLocation(oprApp.getLhs());
               args.add(new CallArgument.Specified(Option.empty(), self, loc, meta(), diag()));
             }
-          } else if (tree instanceof Tree.OprApp oprApp
-                  && isDotDotOperator(oprApp.getOpr().getRight())
-                  && oprApp.getRhs() instanceof Tree.Ident ident) {
-              var methodName = buildName(ident);
-              func = new Name.MethodReference(
-                Option.empty(),
-                methodName,
-                methodName.location(),
-                meta(), diag()
-              );
           } else if (args.isEmpty()) {
             return null;
           } else {
@@ -1064,11 +1067,20 @@ final class TreeToIr {
       case Tree.App app -> {
           var fn = translateExpression(app.getFunc(), isMethod);
           var loc = getIdentifiedLocation(app);
-          if (app.getArg() instanceof Tree.AutoScope) {
+          if (app.getArg() instanceof Tree.SuspendedDefaultArguments) {
               yield new Application.Prefix(fn, nil(), true, loc, meta(), diag());
           } else {
               yield fn.setLocation(loc);
           }
+      }
+      case Tree.AutoscopedIdentifier autoscopedIdentifier -> {
+        var methodName = buildName(autoscopedIdentifier.getIdent());
+        yield new Name.MethodReference(
+                Option.empty(),
+                methodName,
+                getIdentifiedLocation(autoscopedIdentifier),
+                meta(), diag()
+        );
       }
       case Tree.Invalid __ -> translateSyntaxError(tree, Syntax.UnexpectedExpression$.MODULE$);
       default -> translateSyntaxError(tree, new Syntax.UnsupportedSyntax("translateExpression"));
@@ -1103,7 +1115,7 @@ final class TreeToIr {
         case Tree.BodyBlock ignored -> null;
         case Tree.Number ignored -> null;
         case Tree.Wildcard ignored -> null;
-        case Tree.AutoScope ignored -> null;
+        case Tree.SuspendedDefaultArguments ignored -> null;
         case Tree.ForeignFunction ignored -> null;
         case Tree.Import ignored -> null;
         case Tree.Export ignored -> null;
@@ -1878,10 +1890,6 @@ final class TreeToIr {
 
   private static boolean isDotOperator(Token.Operator op) {
     return op != null && ".".equals(op.codeRepr());
-  }
-
-  private static boolean isDotDotOperator(Token.Operator op) {
-    return op != null && "..".equals(op.codeRepr());
   }
 
   private static Tree maybeManyParensed(Tree t) {
