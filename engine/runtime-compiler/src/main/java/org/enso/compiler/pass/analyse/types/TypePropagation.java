@@ -324,7 +324,8 @@ abstract class TypePropagation {
       }
 
       case TypeRepresentation.AtomType atomInstanceType -> {
-        System.out.println("TODO: calling " + function.name() + " on an instance of " + atomInstanceType);
+        System.out.println(
+            "TODO: calling " + function.name() + " on an instance of " + atomInstanceType);
         return null;
       }
 
