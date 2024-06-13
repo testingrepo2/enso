@@ -3,7 +3,8 @@ package org.enso.compiler.pass.analyse;
 import java.io.IOException;
 import org.enso.compiler.pass.analyse.alias.Graph;
 import org.enso.compiler.pass.analyse.alias.Info;
-import org.enso.compiler.pass.analyse.types.TypeInference;
+import org.enso.compiler.pass.analyse.types.TypeInferencePropagation;
+import org.enso.compiler.pass.analyse.types.TypeInferenceSignatures;
 import org.enso.compiler.pass.resolve.DocumentationComments;
 import org.enso.compiler.pass.resolve.DocumentationComments$;
 import org.enso.compiler.pass.resolve.ExpressionAnnotations$;
@@ -75,7 +76,8 @@ import scala.Tuple2$;
     id = 1265,
     allowInlining = false)
 @Persistable(clazz = Graph.Link.class, id = 1266, allowInlining = false)
-@Persistable(clazz = TypeInference.class, id = 1280)
+@Persistable(clazz = TypeInferencePropagation.class, id = 1280)
+@Persistable(clazz = TypeInferenceSignatures.class, id = 1281)
 public final class PassPersistance {
   private PassPersistance() {}
 
