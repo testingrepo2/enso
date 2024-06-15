@@ -3,6 +3,7 @@ package org.enso.compiler
 import org.enso.compiler.data.CompilerConfig
 import org.enso.compiler.pass.PassConfiguration._
 import org.enso.compiler.pass.analyse._
+import org.enso.compiler.pass.analyse.types.scope.StaticModuleScopeAnalysis
 import org.enso.compiler.pass.analyse.types.{TypeInferencePropagation, TypeInferenceSignatures}
 import org.enso.compiler.pass.desugar._
 import org.enso.compiler.pass.lint.{ModuleNameConflicts, NoSelfInStatic, ShadowedPatternFields, UnusedBindings}
@@ -92,6 +93,7 @@ class Passes(
     ) ++ (if (config.staticTypeInferenceEnabled) {
             List(
               TypeInferenceSignatures.INSTANCE,
+              StaticModuleScopeAnalysis.INSTANCE,
               TypeInferencePropagation.INSTANCE
             )
           } else List())
