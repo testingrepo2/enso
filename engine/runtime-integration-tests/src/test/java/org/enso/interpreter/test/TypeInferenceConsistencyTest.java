@@ -271,7 +271,7 @@ public class TypeInferenceConsistencyTest {
 
   private static void assertContains(String exp, String msg) {
     if (!msg.contains(exp)) {
-      fail("Expecting " + msg + " to contain " + exp);
+      fail("Expecting '" + msg + "' to contain '" + exp + "'.");
     }
   }
 }
