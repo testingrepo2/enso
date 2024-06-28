@@ -272,7 +272,6 @@ abstract class TypePropagation {
       CallArgument argument,
       Application.Prefix relatedIR,
       LocalBindingsTyping localBindingsTyping) {
-    System.out.println("processSingleApplication: " + functionType + " " + argument.showCode());
     if (argument.name().isDefined()) {
       // TODO named arguments are not yet supported
       return null;
@@ -313,9 +312,6 @@ abstract class TypePropagation {
       TypeRepresentation.UnresolvedSymbol function,
       Expression argument,
       LocalBindingsTyping localBindingsTyping) {
-    System.out.println(
-        "processUnresolvedSymbolApplication: " + function + " " + argument.showCode());
-
     var argumentType = tryInferringType(argument, localBindingsTyping);
     if (argumentType == null) {
       argumentType = TypeRepresentation.ANY;
