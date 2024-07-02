@@ -1,6 +1,7 @@
 import type * as React from 'react'
 import * as backend from 'enso-common/src/services/Backend'
 import Backend from 'enso-common/src/services/Backend'
+
 export * from 'enso-common/src/services/Backend'
 export default Backend
 

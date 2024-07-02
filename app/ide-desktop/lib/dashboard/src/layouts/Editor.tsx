@@ -96,8 +96,8 @@ function EditorInternal(props: EditorInternalProps) {
     [remoteBackend]
   )
 
-  const renameProject = React.useCallback(
-    (newName: string) => {
+  const backend = React.useMemo(
+    () => {
       let backend: Backend | null
       switch (projectStartupInfo.backendType) {
         case backendModule.BackendType.local:
@@ -107,6 +107,12 @@ function EditorInternal(props: EditorInternalProps) {
           backend = remoteBackend
           break
       }
+      return backend
+    }, [localBackend, remoteBackend, projectStartupInfo.backendType]
+  )
+
+  const renameProject = React.useCallback(
+    (newName: string) => {
       const { id: projectId, parentId, title } = projectStartupInfo.projectAsset
       backend
         ?.updateProject(
@@ -121,7 +127,7 @@ function EditorInternal(props: EditorInternalProps) {
           e => toastAndLog('renameProjectError', e)
         )
     },
-    [remoteBackend, localBackend, projectStartupInfo, toastAndLog]
+    [backend, projectStartupInfo.projectAsset, toastAndLog]
   )
 
   React.useEffect(() => {
@@ -162,6 +168,7 @@ function EditorInternal(props: EditorInternalProps) {
         ignoreParamsRegex: IGNORE_PARAMS_REGEX,
         logEvent,
         renameProject,
+        backend,
       }
     }
   }, [
@@ -175,6 +182,7 @@ function EditorInternal(props: EditorInternalProps) {
     hidden,
     logEvent,
     renameProject,
+    backend,
   ])
 
   if (AppRunner == null) {
