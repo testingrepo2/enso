@@ -273,6 +273,7 @@ function cellRenderer(params: ICellRendererParams) {
   else if (params.value === undefined) return ''
   else if (params.value === '') return '<span style="color:grey; font-style: italic;">Empty</span>'
   else if (typeof params.value === 'number') return formatNumber(params)
+  else if (typeof params.value === 'string') return `<span class="text-cell">${params.value}</span>`
   else if (Array.isArray(params.value)) return `[Vector ${params.value.length} items]`
   else if (typeof params.value === 'object') {
     const valueType = params.value?.type
@@ -685,5 +686,8 @@ a {
 }
 a:hover {
   color: darkblue;
+}
+.text-cell {
+  font-family: monospace;
 }
 </style>
