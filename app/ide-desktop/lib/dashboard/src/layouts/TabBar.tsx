@@ -3,7 +3,7 @@ import * as React from 'react'
 
 import invariant from 'tiny-invariant'
 
-import type * as text from '#/text'
+import type * as text from 'enso-common/src/text'
 
 import * as textProvider from '#/providers/TextProvider'
 

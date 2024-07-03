@@ -6,7 +6,7 @@ import NotCloudIcon from 'enso-assets/not_cloud.svg'
 import RecentIcon from 'enso-assets/recent.svg'
 import Trash2Icon from 'enso-assets/trash2.svg'
 
-import type * as text from '#/text'
+import type * as text from 'enso-common/src/text'
 
 import * as mimeTypes from '#/data/mimeTypes'
 
