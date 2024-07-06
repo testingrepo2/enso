@@ -295,7 +295,7 @@ abstract class TypePropagation {
 
       case TypeRepresentation.UnresolvedSymbol unresolvedSymbol -> {
         return processUnresolvedSymbolApplication(
-            unresolvedSymbol, argument.value(), localBindingsTyping);
+            unresolvedSymbol, argument.value(), localBindingsTyping, relatedIR);
       }
 
       default -> {
@@ -318,7 +318,8 @@ abstract class TypePropagation {
   private TypeRepresentation processUnresolvedSymbolApplication(
       TypeRepresentation.UnresolvedSymbol function,
       Expression argument,
-      LocalBindingsTyping localBindingsTyping) {
+      LocalBindingsTyping localBindingsTyping,
+      IR relatedWholeApplicationIR) {
     var argumentType = tryInferringType(argument, localBindingsTyping);
     if (argumentType == null) {
       argumentType = TypeRepresentation.ANY;
@@ -346,7 +347,7 @@ abstract class TypePropagation {
             return adaptMemberMethodForStaticCall(typeObject, resolvedMemberMethod);
           }
 
-          encounteredNoSuchMethod(argument, argumentType, function.name());
+          encounteredNoSuchMethod(relatedWholeApplicationIR, argumentType, function.name());
           return null;
         }
       }
@@ -355,7 +356,7 @@ abstract class TypePropagation {
         var typeScope = TypeScopeReference.moduleAssociatedType(moduleReference.name());
         var resolvedModuleMethod = methodTypeResolver.resolveMethod(typeScope, function.name());
         if (resolvedModuleMethod == null) {
-          encounteredNoSuchMethod(argument, argumentType, function.name());
+          encounteredNoSuchMethod(relatedWholeApplicationIR, argumentType, function.name());
         }
         return resolvedModuleMethod;
       }
@@ -364,7 +365,7 @@ abstract class TypePropagation {
         var typeScope = TypeScopeReference.atomType(atomInstanceType.fqn());
         var resolvedMemberMethod = methodTypeResolver.resolveMethod(typeScope, function.name());
         if (resolvedMemberMethod == null) {
-          encounteredNoSuchMethod(argument, argumentType, function.name());
+          encounteredNoSuchMethod(relatedWholeApplicationIR, argumentType, function.name());
         }
         return resolvedMemberMethod;
       }
