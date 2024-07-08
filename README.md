@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://discord.gg/enso">
-    <img src="https://img.shields.io/discord/401396655599124480.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2" 
+    <img src="https://img.shields.io/discord/401396655599124480.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2"  
          alt="Chat">
   </a>
   <a href="https://github.com/enso-org/enso/actions">
